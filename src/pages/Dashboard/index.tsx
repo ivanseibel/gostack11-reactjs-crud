@@ -27,7 +27,12 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // TODO LOAD FOODS
+      try {
+        const response = await api.get('/foods');
+        setFoods(response.data);
+      } catch {
+        // TODO: implement error treatment
+      }
     }
 
     loadFoods();
@@ -37,20 +42,52 @@ const Dashboard: React.FC = () => {
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
     try {
-      // TODO ADD A NEW FOOD PLATE TO THE API
+      api
+        .post<IFoodPlate>('/foods', {
+          ...food,
+          available: true,
+        })
+        .then(response => {
+          setFoods([...foods, response.data]);
+        });
     } catch (err) {
-      console.log(err);
+      // TODO: Add error treatment here
     }
   }
 
   async function handleUpdateFood(
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
-    // TODO UPDATE A FOOD PLATE ON THE API
+    try {
+      api
+        .put<IFoodPlate>(`/foods/${editingFood.id}`, {
+          ...food,
+          available: editingFood.available,
+        })
+        .then(response => {
+          setFoods(
+            foods.map(item => {
+              return editingFood.id === item.id ? response.data : item;
+            }),
+          );
+        });
+    } catch (err) {
+      // TODO: Add error treatment here
+    }
   }
 
   async function handleDeleteFood(id: number): Promise<void> {
-    // TODO DELETE A FOOD PLATE FROM THE API
+    try {
+      api.delete(`/foods/${id}`).then(() => {
+        setFoods(
+          foods.filter(item => {
+            return id !== item.id;
+          }),
+        );
+      });
+    } catch (err) {
+      // TODO: Add error treatment here
+    }
   }
 
   function toggleModal(): void {
@@ -62,7 +99,8 @@ const Dashboard: React.FC = () => {
   }
 
   function handleEditFood(food: IFoodPlate): void {
-    // TODO SET THE CURRENT EDITING FOOD ID IN THE STATE
+    setEditingFood(food);
+    toggleEditModal();
   }
 
   return (
